@@ -64,16 +64,21 @@ public class StudentData extends HttpServlet{
 		    {
 		        try {
 		            Connection con = com.Restapidemo.Database.initializeDatabase();
-		            PreparedStatement st = con.prepareStatement("insert into student values(?, ?, ?, ?)");
-		            st.setInt(1, Integer.valueOf(request.getParameter("id")));
-		            st.setString(2, request.getParameter("name"));
-		            st.setString(3, request.getParameter("dob"));
-		            st.setString(4, request.getParameter("phone"));
+		            PreparedStatement st = con.prepareStatement("insert into student(name,dob,phone) values(?, ?, ?)");
+//		            st.setInt(1, Integer.valueOf(request.getParameter("id")));
+		            st.setString(1, request.getParameter("name"));
+		            st.setString(2, request.getParameter("dob"));
+		            st.setString(3, request.getParameter("phone"));
 		            st.executeUpdate();
+		            st=con.prepareStatement("select count(*) from student");
+		            ResultSet rs = st.executeQuery();
+		            rs.next();
+		            int id=rs.getInt(1);
 		            st.close();
 		            con.close();
 		            JSONObject js = new JSONObject();
 		            js.put("out", "New Student added Successfully");
+		            js.put("ID of new student",id );
 		            response.getWriter().print(js.toString());
 		        }
 		        catch (Exception e) {
@@ -123,7 +128,16 @@ public class StudentData extends HttpServlet{
 		        try {
 		            Connection con = com.Restapidemo.Database.initializeDatabase();
 		            Statement st = con.createStatement();
-		            String query = "delete from student where id = "+request.getParameter("id");
+		            String query = "select * from student where id = "+request.getParameter("id");
+		            ResultSet rs = st.executeQuery(query);
+		            if(rs.next()==false) {
+		            	JSONObject js = new JSONObject();
+		            	js.put("output","Given ID is not available");
+		            	response.getWriter().print(js.toString());
+		            	con.close();
+		            	st.close();
+		            }else {
+		            query = "delete from student where id = "+request.getParameter("id");
 		            st.execute(query);
 		            st.close();
 		            con.close();
@@ -131,6 +145,7 @@ public class StudentData extends HttpServlet{
 		            js.put("out", "Deleted Successfully");
 		            response.getWriter().print(js.toString());
 		        }
+		       }
 		        catch (Exception e) {
 		        	JSONObject js = new JSONObject();
 		            js.put("out", e.getMessage());
